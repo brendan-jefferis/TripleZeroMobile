@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, Text, View, Button } from 'react-native'
+import { StyleSheet, Text, View, Button} from 'react-native'
 
 
 const userId = 'BOB1234'
@@ -24,27 +24,20 @@ export default class App extends React.Component {
     super(props)
     this.state = {
       message: '',
-      log: []
+      connected: false
     }
-  }
-
-  renderLog = entry => {
-    return (
-      <Text key={entry.key}>{entry.message}</Text>
-    )
   }
 
   connect = () => {
     this.ws = new WebSocket(wsUrl)
     this.ws.onopen = () => {
       this.ws.send(JSON.stringify({profile}))
+      this.setState({connected: true})
     }
 
     this.ws.onmessage = (e) => {
       const { message } = JSON.parse(e.data)
-      this.setState({
-        log: this.state.log.concat({ key: timestamp(), message })
-      })
+      console.log(`${timestamp()} | ${message}`)
     }
 
     this.ws.onerror = (e) => {
@@ -52,14 +45,8 @@ export default class App extends React.Component {
     }
 
     this.ws.onclose = (e) => {
-      this.setState({
-        log: this.state.log.concat({ key: timestamp(), message: 'DISCONNECTED' })
-      })
-      setTimeout(() => {
-        this.setState({
-          log: []
-        })
-      }, 3000)
+      this.setState({connected: false})
+      console.log(`${timestamp()} | DISCONNECTED`)
       console.log(e.code, e.reason)
     }
   }
@@ -71,24 +58,25 @@ export default class App extends React.Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.header}>TripleZero prototype</Text>
+        <Text style={styles.header}>{this.state.connected ? 'Connected' : 'Disconnected'}</Text>
         <View style={styles.buttonRow}>
-          <Button
-            style={styles.button}
-            onPress={this.connect}
-            title="Connect"
-            color="green"
-            accessibilityLabel="Send message"
-          />
-          <Button
-            style={styles.button}
-            onPress={this.disconnect}
-            title="Disconnect"
-            color="crimson"
-            accessibilityLabel="Disconnect"
-          />
+            {this.state.connected
+              ? <Button
+                  style={styles.button}
+                  onPress={this.disconnect}
+                  title="Disconnect"
+                  color="crimson"
+                  accessibilityLabel="Disconnect"
+                />
+              : <Button
+                  style={styles.button}
+                  onPress={this.connect}
+                  title="Connect"
+                  color="green"
+                  accessibilityLabel="Send message"
+                />
+            }
         </View>
-        {this.state.log.map(this.renderLog)}
       </View>
     )
   }
@@ -97,22 +85,26 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'flex-start',
+    backgroundColor: '#f3f3f3',
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'stretch',
-    marginTop: 50,
-    marginLeft: 20
+    paddingTop: 50,
+    paddingLeft: 20,
+    paddingRight: 20
   },
   header: {
     fontSize: 22
   },
   buttonRow: {
-    display: 'flex',
-    flexDirection: 'row',
+    marginTop: 20,
+    flexShrink: 1,
     alignSelf: 'stretch'
   },
   button: {
-    flex: 1,
-    margin: '0 20'
+    flexDirection: 'row',
+    height: 70,
+    borderRadius: 10,
+    alignSelf: 'stretch'
   }
 })
