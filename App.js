@@ -33,6 +33,8 @@ export default class App extends React.Component {
     this.ws.onopen = () => {
       this.ws.send(JSON.stringify({profile}))
       this.setState({connected: true})
+      navigator.geolocation.getCurrentPosition(location => this.ws.send(JSON.stringify({location})))
+      navigator.geolocation.watchPosition(location => this.ws.send(JSON.stringify({location})), e => console.log('Location watch error', e), {})
     }
 
     this.ws.onmessage = (e) => {
@@ -41,13 +43,12 @@ export default class App extends React.Component {
     }
 
     this.ws.onerror = (e) => {
-      console.log(e.message)
+      console.log('ERROR', e.message)
     }
 
-    this.ws.onclose = (e) => {
+    this.ws.onclose = () => {
       this.setState({connected: false})
       console.log(`${timestamp()} | DISCONNECTED`)
-      console.log(e.code, e.reason)
     }
   }
 
